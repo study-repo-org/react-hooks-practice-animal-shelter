@@ -5,7 +5,38 @@ import PetBrowser from "./PetBrowser";
 
 function App() {
   const [pets, setPets] = useState([]);
-  const [filters, setFilters] = useState({ type: "all" });
+  const [filters, setFilters] = useState("all"); 
+
+  function handleChangeType(type){
+    setFilters(type)
+  }
+
+  function handleFindPetsClick(){
+    let endpoint = 'http://localhost:3001/pets'
+    if(filters !== 'all'){
+      endpoint += `?type=${filters}`
+    }
+    fetch(endpoint)
+      .then(r => r.json())
+      .then(setPets)
+  }
+
+  function handleAdoptPet(id){
+    let updatedPet = {}
+    const config = {
+      method: 'patch',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({isAdopted: true})
+    }
+    fetch(`http://localhost:3001/pets/${id}`, config)
+      .then(r => r.json())
+      .then(changedPet => updatedPet = changedPet)
+
+    const updatedPets = pets.map(pet => {
+      return pet.id === id ? {...pet, isAdopted: true} : pet
+    })
+    setPets(updatedPets)
+  }
 
   return (
     <div className="ui container">
@@ -15,10 +46,13 @@ function App() {
       <div className="ui container">
         <div className="ui grid">
           <div className="four wide column">
-            <Filters />
+            <Filters 
+              onChangeType={handleChangeType}
+              onFindPetsClick={handleFindPetsClick}
+            />
           </div>
           <div className="twelve wide column">
-            <PetBrowser />
+            <PetBrowser onAdoptPet={handleAdoptPet} pets={pets}/>
           </div>
         </div>
       </div>
